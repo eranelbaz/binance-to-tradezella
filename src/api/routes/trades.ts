@@ -97,52 +97,7 @@ const router = Router();
  */
 router.get('/latest', tradeController.getLatestTrades);
 
-/**
- * @swagger
- * /trades/date/{date}:
- *   get:
- *     tags: [Trades]
- *     summary: Get trades by date
- *     description: Fetches all trades for a specific date in YYYYMMDD format
- *     security:
- *       - ApiKeyAuth: []
- *     parameters:
- *       - in: path
- *         name: date
- *         required: true
- *         description: Date in YYYYMMDD format (e.g., 20230615)
- *         schema:
- *           type: string
- *           pattern: '^\d{8}$'
- *           example: '20230615'
- *     responses:
- *       200:
- *         description: Successfully retrieved trades for the specified date as CSV file
- *         content:
- *           text/csv:
- *             schema:
- *               type: string
- *               format: binary
- *         headers:
- *           Content-Disposition:
- *             schema:
- *               type: string
- *             description: Attachment with filename in format 'trades-YYYYMMDD.csv'
- *       400:
- *         description: Bad request - Invalid date format
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- *       401:
- *         description: Unauthorized - Invalid or missing API key
- *       500:
- *         description: Internal server error
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Error'
- */
+
 router.get('/date/:date', tradeController.getTradesByDate);
 
 export default router;

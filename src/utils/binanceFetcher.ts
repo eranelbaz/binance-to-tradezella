@@ -5,26 +5,9 @@
  * using the Binance API. It authenticates with credentials from the .env file.
  */
 
-import Binance, {FuturesUserTradeResult} from 'binance-api-node';
-import dotenv from 'dotenv';
+import { FuturesUserTradeResult } from 'binance-api-node';
 import { readLatestTradeTimes } from './latestTimeHandler';
-
-// Load environment variables from .env file
-dotenv.config();
-
-// Check if environment variables are set
-const apiKey = process.env.BINANCE_API_KEY;
-const apiSecret = process.env.BINANCE_API_SECRET;
-
-if (!apiKey || !apiSecret) {
-  throw new Error('BINANCE_API_KEY and BINANCE_API_SECRET must be set in .env file');
-}
-
-// Initialize Binance client with authentication
-const client = Binance({
-  apiKey,
-  apiSecret,
-});
+import { getClient } from './binanceClient';
 
 // Define the trading pairs to fetch
 export const TRADING_PAIRS = process.env.TRADING_PAIRS?.split(',').map(pair => pair.trim()) || [];
@@ -56,7 +39,7 @@ const fetchFuturesTrades = async (
       params.startTime = startTime;
     }
     
-    const trades = await client.futuresUserTrades(params);
+    const trades = await getClient().futuresUserTrades(params);
     
     console.log(`Successfully fetched ${trades.length} trades for ${symbol}`);
     return trades;
@@ -78,22 +61,24 @@ export const fetchAllFuturesTrades = async (useLatestTimes: boolean = true): Pro
   // Get the latest trade times if we're using them
   const latestTimes = useLatestTimes ? readLatestTradeTimes() : {};
   
-  for (const symbol of TRADING_PAIRS) {
-    try {
-      // Get the last trade time for this symbol if available
-      const lastTradeTime = latestTimes[symbol];
-      
-      // Fetch trades, using the last trade time if available
-      results[symbol] = await fetchFuturesTrades(
-        symbol, 
-        500, 
-        lastTradeTime ? lastTradeTime + 1 : undefined // Add 1ms to avoid duplicate trades
-      );
-    } catch (error) {
-      console.error(`Failed to fetch trades for ${symbol}`, error);
-      results[symbol] = [];
-    }
-  }
+  await Promise.all(
+    TRADING_PAIRS.map(async (symbol) => {
+      try {
+        // Get the last trade time for this symbol if available
+        const lastTradeTime = latestTimes[symbol];
+
+        // Fetch trades, using the last trade time if available
+        results[symbol] = await fetchFuturesTrades(
+          symbol,
+          500,
+          lastTradeTime ? lastTradeTime + 1 : undefined // Add 1ms to avoid duplicate trades
+        );
+      } catch (error) {
+        console.error(`Failed to fetch trades for ${symbol}`, error);
+        results[symbol] = [];
+      }
+    })
+  );
   
   return results;
 };

@@ -1,63 +1,34 @@
 import express, { Request, Response, NextFunction, Router } from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
+import { swaggerDefinition } from './api/swagger';
 import tradesRouter from './api/routes/trades';
+import { getClient } from './utils/binanceClient';
 
 dotenv.config();
 
-// Swagger configuration
-const swaggerOptions = {
-  definition: {
-    openapi: '3.0.0',
-    info: {
-      title: 'Tradezella Syncer API',
-      version: '1.0.0',
-      description: 'API for syncing and fetching Binance trades',
-      contact: {
-        name: 'Tradezella Support',
-      },
-    },
-    servers: [
-      {
-        url: '/api',
-        description: 'API Base Path',
-      },
-      {
-        url: `http://localhost:${process.env.PORT ? parseInt(process.env.PORT, 10) : 8800}/api`,
-        description: 'Development server',
-      },
-      {
-        url: `http://${process.env.HOST || 'localhost'}:${process.env.PORT || 8800}/api`,
-        description: 'Custom host',
-      },
-    ],
-    components: {
-      securitySchemes: {
-        ApiKeyAuth: {
-          type: 'apiKey',
-          in: 'header',
-          name: 'Authorization',
-        },
-      },
-    },
-    security: [
-      {
-        ApiKeyAuth: [],
-      },
-    ],
-  },
-  apis: ['./dist/api/routes/*.js'],
-};
-
-const specs = swaggerJsdoc(swaggerOptions);
+// Use code-based Swagger definition (dynamic example for /trades/date/{date})
 
 const app = express();
 const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 8800;
 
 // Middleware
 app.use(cors());
+
+// Serve Swagger UI with code-based definition
+defineSwaggerServers(swaggerDefinition, process.env);
+app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(swaggerDefinition));
+
+function defineSwaggerServers(swaggerDef: any, env: NodeJS.ProcessEnv) {
+  // Optionally update servers dynamically based on env
+  swaggerDef.servers = [
+    { url: '/api', description: 'API Base Path' },
+    { url: `http://localhost:${env.PORT ? parseInt(env.PORT, 10) : 8800}/api`, description: 'Development server' },
+    { url: `http://${env.HOST || 'localhost'}:${env.PORT || 8800}/api`, description: 'Custom host' },
+  ];
+}
+
 app.use(express.json());
 
 // Logging middleware
@@ -73,22 +44,6 @@ apiRouter.use('/trades', tradesRouter);
 // Mount API routes under /api
 app.use('/api', apiRouter);
 
-// API Documentation - Moved to /api-docs to avoid conflicts
-app.use('/api-docs', swaggerUi.serve, swaggerUi.setup(specs, { 
-  explorer: true,
-  swaggerOptions: {
-    urls: [{
-      url: '/api-docs-json',
-      name: 'Tradezella Syncer API'
-    }]
-  }
-}));
-
-// Serve OpenAPI spec at /api-docs-json
-app.get('/api-docs-json', (_req, res) => {
-  res.setHeader('Content-Type', 'application/json');
-  res.send(specs);
-});
 
 // Health check endpoint
 app.get('/health', (_req: Request, res: Response) => {
@@ -121,8 +76,12 @@ export function getLocalIpAddress(): string {
 }
 
 // Start the server
-const server = app.listen(PORT, '0.0.0.0', () => {
+
+const server = app.listen(PORT, '0.0.0.0', async () => {
   const localIp = getLocalIpAddress();
+  console.log("Initalize Binance Link");
+  getClient()
+  console.log("Done init Binance Link");
   console.log(`Server is running on port ${PORT}`);
   console.log(`Access locally:      http://localhost:${PORT}`);
   console.log(`Access on network:   http://${localIp}:${PORT}`);

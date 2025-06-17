@@ -9,11 +9,13 @@
     "start:dev": "ts-node src/server.ts",
     "dev": "ts-node src/index.ts",
     "server": "ts-node src/server.ts",
-    "test": "jest"
+    "test": "jest",
+    "docker:build": "docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/eranelbaz/binance-to-tradezella:latest"
   },
   "dependencies": {
     "@types/swagger-jsdoc": "^6.0.4",
     "@types/swagger-ui-express": "^4.1.8",
+    "axios": "^1.10.0",
     "binance-api-node": "^0.12.9",
     "cors": "^2.8.5",
     "dotenv": "^16.5.0",
