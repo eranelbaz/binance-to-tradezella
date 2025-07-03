@@ -4,6 +4,7 @@ import dotenv from 'dotenv';
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import tradesRouter from './api/routes/trades';
+import { getClient } from './utils/binanceClient';
 
 dotenv.config();
 
@@ -121,8 +122,12 @@ export function getLocalIpAddress(): string {
 }
 
 // Start the server
-const server = app.listen(PORT, '0.0.0.0', () => {
+
+const server = app.listen(PORT, '0.0.0.0', async () => {
   const localIp = getLocalIpAddress();
+  console.log("Initalize Binance Link");
+  getClient()
+  console.log("Done init Binance Link");
   console.log(`Server is running on port ${PORT}`);
   console.log(`Access locally:      http://localhost:${PORT}`);
   console.log(`Access on network:   http://${localIp}:${PORT}`);
