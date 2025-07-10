@@ -10,7 +10,7 @@
     "dev": "ts-node src/index.ts",
     "server": "ts-node src/server.ts",
     "test": "jest",
-    "docker:build": "docker buildx build --platform linux/amd64,linux/arm64 -t ghcr.io/eranelbaz/binance-to-tradezella:latest"
+    "docker:build": "docker buildx build --platform linux/amd64,linux/arm64/v8 -t ghcr.io/eranelbaz/binance-to-tradezella:latest ."
   },
   "dependencies": {
     "@types/swagger-jsdoc": "^6.0.4",

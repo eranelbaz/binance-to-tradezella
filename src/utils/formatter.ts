@@ -7,7 +7,7 @@
 import { FuturesUserTradeResult } from 'binance-api-node';
 import { getClient } from './binanceClient';
 
-export const PAIR_WITH = process.env.PAIR_WITH;
+export const PAIR_WITH = process.env.PAIR_WITH!;
 
 // Format a date in New York timezone
 const formatInNYTZ = (date: Date | number, options: Intl.DateTimeFormatOptions): string => {
